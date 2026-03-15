@@ -32,20 +32,27 @@ from typing import Any
 BASE = Path(__file__).parent
 DATA = BASE / "data"
 
-# === 防濫用門檻 ===
-RATE_LIMIT_PER_HOUR = 20      # 每個 IP 每小時最多幾則
+# === 每日額度門檻 ===
+# 1 把 Gemini key 的免費額度 ≈ 500 次/天
+# 3 把 key 共 1500，但只用 1 把的量當每日上限（其他留 buffer）
+DAILY_GLOBAL_LIMIT = 500      # 全站每日總量
+DAILY_PER_USER = 15           # 每人每日最多幾則（500/30人≈15）
 RATE_LIMIT_COOLDOWN = 3       # 每則之間至少幾秒
 MSG_MIN_LENGTH = 5            # 最短幾個字
 MSG_MAX_LENGTH = 800          # 最長幾個字
-INSIGHT_MIN_SCORE = 6         # 洞見品質門檻（0-10，Gemini 評分）
-INSIGHT_MIN_LENGTH = 20       # 洞見最短字數（太短的不收）
+INSIGHT_MIN_LENGTH = 20       # 洞見最短字數
 BANNED_PATTERNS = [           # 垃圾訊息關鍵字
     'http://', 'https://', '.com/', 'click here',
     'buy now', 'free money', 'airdrop', 'giveaway',
 ]
 
-# IP → [(timestamp, ...)] 的訪問紀錄
-_rate_tracker: dict[str, list[float]] = defaultdict(list)
+# 每日計數器（UTC 日期切換時自動重置）
+_daily_state = {
+    'date': '',        # 當天日期，換日自動重置
+    'global_count': 0, # 全站今日用量
+    'per_user': defaultdict(int),  # 每人今日用量
+    'last_msg': defaultdict(float),  # 每人上次發訊時間
+}
 
 # === Gemini Flash 三把 Key 輪用 ===
 GEMINI_KEYS = [
@@ -61,27 +68,57 @@ CROWD_INSIGHTS_FILE = DATA / "crowd_insights.json"
 PORT = 8888
 
 
-def _check_rate_limit(ip: str) -> str | None:
+def _check_rate_limit(ip: str) -> tuple[str | None, dict]:
     """
-    檢查 IP 是否超過限制。
-    回傳 None = 通過，回傳字串 = 被擋（附原因）。
+    每日額度檢查。
+
+    回傳：(錯誤訊息或None, 當日統計)
+    換日自動重置所有計數器。
     """
     now = time.time()
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    anon = _anon_id(ip)
 
-    # 清理一小時前的紀錄
-    _rate_tracker[ip] = [t for t in _rate_tracker[ip] if now - t < 3600]
+    # 換日 → 重置
+    if _daily_state['date'] != today:
+        _daily_state['date'] = today
+        _daily_state['global_count'] = 0
+        _daily_state['per_user'] = defaultdict(int)
+        _daily_state['last_msg'] = defaultdict(float)
 
-    # 每小時上限
-    if len(_rate_tracker[ip]) >= RATE_LIMIT_PER_HOUR:
-        return f"你問太快了，每小時最多 {RATE_LIMIT_PER_HOUR} 則。休息一下再來！"
+    stats = {
+        'daily_used': _daily_state['global_count'],
+        'daily_limit': DAILY_GLOBAL_LIMIT,
+        'daily_remaining': DAILY_GLOBAL_LIMIT - _daily_state['global_count'],
+        'your_used': _daily_state['per_user'][anon],
+        'your_limit': DAILY_PER_USER,
+    }
+
+    # 全站每日上限
+    if _daily_state['global_count'] >= DAILY_GLOBAL_LIMIT:
+        return (f"今天的額度用完了（{DAILY_GLOBAL_LIMIT}/{DAILY_GLOBAL_LIMIT}）。"
+                f"明天 UTC 0:00 重置，到時再來！", stats)
+
+    # 每人每日上限
+    if _daily_state['per_user'][anon] >= DAILY_PER_USER:
+        return (f"你今天已經聊了 {DAILY_PER_USER} 則。"
+                f"明天再來吧！把機會留給其他人 😊", stats)
 
     # 冷卻時間
-    if _rate_tracker[ip] and now - _rate_tracker[ip][-1] < RATE_LIMIT_COOLDOWN:
-        return f"慢一點，{RATE_LIMIT_COOLDOWN} 秒後再發。"
+    last = _daily_state['last_msg'].get(anon, 0)
+    if now - last < RATE_LIMIT_COOLDOWN:
+        return (f"慢一點，{RATE_LIMIT_COOLDOWN} 秒後再發。", stats)
 
-    # 通過 → 記錄
-    _rate_tracker[ip].append(now)
-    return None
+    # 通過 → 計數
+    _daily_state['global_count'] += 1
+    _daily_state['per_user'][anon] += 1
+    _daily_state['last_msg'][anon] = now
+
+    stats['daily_used'] = _daily_state['global_count']
+    stats['daily_remaining'] = DAILY_GLOBAL_LIMIT - _daily_state['global_count']
+    stats['your_used'] = _daily_state['per_user'][anon]
+
+    return (None, stats)
 
 
 def _check_message(text: str) -> str | None:
@@ -580,10 +617,14 @@ class ChatHandler(BaseHTTPRequestHandler):
             ip = self._get_ip()
             anon = _anon_id(ip)
 
-            # 門檻 1：rate limit
-            rate_error = _check_rate_limit(ip)
+            # 門檻 1：每日額度
+            rate_error, quota = _check_rate_limit(ip)
             if rate_error:
-                self._json_response(429, {'reply': rate_error, 'blocked': True})
+                self._json_response(429, {
+                    'reply': rate_error,
+                    'blocked': True,
+                    'quota': quota,
+                })
                 return
 
             length = int(self.headers.get('Content-Length', 0))
@@ -608,6 +649,7 @@ class ChatHandler(BaseHTTPRequestHandler):
                 'reply': reply,
                 'timestamp': datetime.now(timezone.utc).isoformat(),
                 'anon_id': anon[:4] + '****',
+                'quota': quota,
             })
         else:
             self.send_response(404)
