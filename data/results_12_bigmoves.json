@@ -1,0 +1,11 @@
+{
+  "big_move_stats": {
+    "huge_up": 3,
+    "big_up": 15,
+    "huge_down": 5,
+    "big_down": 16,
+    "normal": 250
+  },
+  "up_rules": [],
+  "down_rules": []
+}

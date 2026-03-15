@@ -1,0 +1,15 @@
+# 大型原始檔案（太大不適合 git）
+raw_archive.csv
+clean_all.csv
+clean_all.json
+clean_president.csv
+clean_president.json
+
+# 暫存
+__pycache__/
+*.pyc
+.DS_Store
+*.bak
+last_seen_post.txt
+alerts_log.json
+overnight_log.txt

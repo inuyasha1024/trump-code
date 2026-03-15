@@ -1,0 +1,478 @@
+{
+  "total_tested": 612300,
+  "train_passed": 50412,
+  "final_passed": 8663,
+  "top_30": [
+    {
+      "rank": 1,
+      "features": [
+        "brag_heavy",
+        "has_deal",
+        "sig_tyfa",
+        "tariff_rising"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 3.873,
+      "test_avg_return": 0.597
+    },
+    {
+      "rank": 2,
+      "features": [
+        "brag_heavy",
+        "has_china",
+        "has_deal",
+        "sig_tyfa"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 2.637,
+      "test_avg_return": 0.946
+    },
+    {
+      "rank": 3,
+      "features": [
+        "has_action",
+        "has_attack",
+        "open_tariff",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 2.507,
+      "test_avg_return": 0.498
+    },
+    {
+      "rank": 4,
+      "features": [
+        "has_action",
+        "has_attack",
+        "open_tariff_heavy",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 2.507,
+      "test_avg_return": 0.498
+    },
+    {
+      "rank": 5,
+      "features": [
+        "has_market_brag",
+        "has_night_post",
+        "long_posts",
+        "pre_action"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.832,
+      "test_avg_return": 1.024
+    },
+    {
+      "rank": 6,
+      "features": [
+        "has_deal",
+        "long_posts",
+        "posts_high",
+        "sig_tyfa"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.623,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 7,
+      "features": [
+        "has_night_post",
+        "has_positive",
+        "long_posts",
+        "pre_action"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.719,
+      "test_avg_return": 1.024
+    },
+    {
+      "rank": 8,
+      "features": [
+        "brag_heavy",
+        "has_action",
+        "has_night_post",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.558,
+      "test_avg_return": 1.145
+    },
+    {
+      "rank": 9,
+      "features": [
+        "brag_heavy",
+        "has_deal",
+        "has_night_post",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.678,
+      "test_avg_return": 0.983
+    },
+    {
+      "rank": 10,
+      "features": [
+        "brag_heavy",
+        "has_deal",
+        "has_night_post",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.453,
+      "test_avg_return": 1.145
+    },
+    {
+      "rank": 11,
+      "features": [
+        "brag_heavy",
+        "deal_heavy",
+        "deal_over_tariff",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.44,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 12,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "has_action",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.44,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 13,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "open_deal",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.44,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 14,
+      "features": [
+        "deal_heavy",
+        "has_russia",
+        "long_posts",
+        "sig_tyfa"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.35,
+      "test_avg_return": 1.21
+    },
+    {
+      "rank": 15,
+      "features": [
+        "deal_only",
+        "has_action",
+        "has_night_post",
+        "long_posts"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.531,
+      "test_avg_return": 1.024
+    },
+    {
+      "rank": 16,
+      "features": [
+        "has_action",
+        "has_russia",
+        "long_posts",
+        "sig_tyfa"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.325,
+      "test_avg_return": 1.21
+    },
+    {
+      "rank": 17,
+      "features": [
+        "deal_heavy",
+        "has_market_brag",
+        "has_night_post",
+        "long_posts"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.506,
+      "test_avg_return": 1.024
+    },
+    {
+      "rank": 18,
+      "features": [
+        "has_deal",
+        "has_market_brag",
+        "long_posts",
+        "pre_tariff"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 2.409,
+      "test_avg_return": 0.118
+    },
+    {
+      "rank": 19,
+      "features": [
+        "brag_heavy",
+        "deal_only",
+        "open_deal",
+        "posts_high"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.573,
+      "test_avg_return": 0.929
+    },
+    {
+      "rank": 20,
+      "features": [
+        "deal_heavy",
+        "deal_over_tariff",
+        "posts_high",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.362,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 21,
+      "features": [
+        "deal_over_tariff",
+        "has_action",
+        "posts_high",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.362,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 22,
+      "features": [
+        "deal_over_tariff",
+        "open_deal",
+        "posts_high",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.362,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 23,
+      "features": [
+        "deal_heavy",
+        "has_night_post",
+        "long_posts",
+        "positive_heavy"
+      ],
+      "direction": "LONG",
+      "hold": 3,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.425,
+      "test_avg_return": 1.024
+    },
+    {
+      "rank": 24,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 25,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "has_deal",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 26,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "has_market_brag",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 27,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "has_positive",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 28,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "lots_of_excl",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 29,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "positive_heavy",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    },
+    {
+      "rank": 30,
+      "features": [
+        "brag_heavy",
+        "deal_over_tariff",
+        "posts_high",
+        "volume_spike"
+      ],
+      "direction": "LONG",
+      "hold": 2,
+      "train_win_rate": 100.0,
+      "test_win_rate": 100.0,
+      "train_avg_return": 1.295,
+      "test_avg_return": 1.138
+    }
+  ],
+  "feature_frequency": {
+    "sig_tyfa": 2199,
+    "has_positive": 1977,
+    "lots_of_excl": 1974,
+    "positive_heavy": 1862,
+    "has_action": 1656,
+    "deal_heavy": 1648,
+    "brag_heavy": 1642,
+    "has_deal": 1447,
+    "long_posts": 1442,
+    "has_market_brag": 1288,
+    "deal_over_tariff": 1265,
+    "posts_high": 1119,
+    "has_tariff": 1056,
+    "has_night_post": 1025,
+    "sig_djt": 1000,
+    "deal_only": 896,
+    "has_attack": 895,
+    "open_deal": 893,
+    "pre_action": 881,
+    "open_tariff_heavy": 730
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "buy_hold_return": 10.6,
+  "R1: 盤前RELIEF→買1天": {
+    "trades": 15,
+    "win_rate": 60.0,
+    "avg_return": -0.112,
+    "total_return": -1.68,
+    "max_drawdown": 4.14,
+    "final_value": 9829.0
+  },
+  "R2: 盤中TARIFF×2→空1天": {
+    "trades": 23,
+    "win_rate": 47.8,
+    "avg_return": 0.285,
+    "total_return": 6.55,
+    "max_drawdown": 6.9,
+    "final_value": 10630.0
+  },
+  "R3: 連3天TARIFF後DEAL→買2天": {
+    "trades": 19,
+    "win_rate": 52.6,
+    "avg_return": 0.492,
+    "total_return": 9.35,
+    "max_drawdown": 9.31,
+    "final_value": 10872.0
+  },
+  "R4: 三信號齊發→買3天": {
+    "trades": 29,
+    "win_rate": 69.0,
+    "avg_return": 0.2,
+    "total_return": 5.8,
+    "max_drawdown": 6.99,
+    "final_value": 10553.0
+  },
+  "R5: 炫耀股市×2→空1天": {
+    "trades": 111,
+    "win_rate": 36.9,
+    "avg_return": -0.192,
+    "total_return": -21.34,
+    "max_drawdown": 25.21,
+    "final_value": 8018.0
+  },
+  "R6: 爆量日+關稅密集→買2天": {
+    "trades": 6,
+    "win_rate": 0.0,
+    "avg_return": -2.73,
+    "total_return": -16.38,
+    "max_drawdown": 15.52,
+    "final_value": 8448.0
+  },
+  "R7: 盤前ACTION→買1天": {
+    "trades": 38,
+    "win_rate": 57.9,
+    "avg_return": 0.231,
+    "total_return": 8.79,
+    "max_drawdown": 5.34,
+    "final_value": 10892.0
+  }
+}
