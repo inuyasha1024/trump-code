@@ -117,24 +117,51 @@ def fetch_trump_markets(
     """
     搜尋所有川普相關的預測市場。
 
-    透過 Gamma API 以 'Trump' 為關鍵字搜尋，
-    回傳包含市場列表的 dict。
+    用多個關鍵字搜尋 slug（slug_contains 是 Gamma API 唯一有效的文字搜尋）。
+    合併去重後回傳。
 
     Args:
-        limit: 回傳市場數量上限，預設 50。
+        limit: 每個關鍵字回傳數量上限。
         active: 是否只回傳進行中的市場。
 
     Returns:
-        {"data": [{"id": ..., "question": ..., ...}, ...]}
+        {"data": [market_dict, ...]}
     """
-    params = urllib.parse.urlencode({
-        "limit": limit,
-        "active": str(active).lower(),
-        "closed": "false" if active else "true",
-        "tag": "Trump",
-    })
-    url = f"{GAMMA_BASE_URL}/markets?{params}"
-    return _request(url)
+    # 多關鍵字搜尋（slug 用連字號）
+    search_slugs = [
+        'trump', 'tariff', 'trade-deal', 'china-trade',
+        'executive-order', 'approval-rating', 'congress',
+    ]
+
+    all_markets: dict[str, dict] = {}
+
+    for slug_kw in search_slugs:
+        params = urllib.parse.urlencode({
+            "limit": min(limit, 30),
+            "active": str(active).lower(),
+            "closed": "false" if active else "true",
+            "slug_contains": slug_kw,
+        })
+        url = f"{GAMMA_BASE_URL}/markets?{params}"
+        try:
+            result = _request(url)
+            markets = result.get('data', result) if isinstance(result, dict) else result
+            if isinstance(markets, list):
+                for m in markets:
+                    mid = m.get('id', m.get('conditionId', ''))
+                    if mid:
+                        all_markets[mid] = m
+        except PolymarketAPIError:
+            continue
+
+    # 按流動性排序
+    sorted_markets = sorted(
+        all_markets.values(),
+        key=lambda m: float(m.get('liquidityNum', 0) or 0),
+        reverse=True,
+    )
+
+    return {"data": sorted_markets}
 
 
 def search_markets(query: str, limit: int = 20) -> dict[str, Any]:
@@ -142,17 +169,19 @@ def search_markets(query: str, limit: int = 20) -> dict[str, Any]:
     以自訂關鍵字搜尋 Polymarket 市場。
 
     Args:
-        query: 搜尋字串（例如 'tariff', 'china trade'）。
+        query: 搜尋字串（例如 'tariff', 'china-trade'）。
         limit: 回傳數量上限。
 
     Returns:
         {"data": [market_dict, ...]}
     """
+    # slug_contains 是唯一有效的文字搜尋方式
+    slug_query = query.lower().replace(' ', '-')
     params = urllib.parse.urlencode({
         "limit": limit,
         "active": "true",
         "closed": "false",
-        "tag": query,
+        "slug_contains": slug_query,
     })
     url = f"{GAMMA_BASE_URL}/markets?{params}"
     return _request(url)
