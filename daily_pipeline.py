@@ -692,7 +692,19 @@ def main():
     # 7. 預測市場套利掃描
     pm_results = scan_prediction_markets(key)
 
-    # 8. 同步
+    # 8. 刪文偵測
+    log("🔍 7.5/8 刪文偵測...")
+    try:
+        from deletion_detector import detect_deletions
+        deletion_result = detect_deletions()
+        if deletion_result and deletion_result.get('new_deletions', 0) > 0:
+            log(f"   🚨 發現 {deletion_result['new_deletions']} 篇新刪文！")
+    except ImportError:
+        log("   ℹ️ deletion_detector 不存在，跳過")
+    except Exception as e:
+        log(f"   ⚠️ 刪文偵測失敗: {e}")
+
+    # 9. 同步
     sync_to_github()
 
     log(f"\n{'='*70}")
