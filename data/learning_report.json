@@ -1,0 +1,247 @@
+{
+  "date": "2026-03-15",
+  "generated_at": "2026-03-15T04:40:01Z",
+  "total_models": 11,
+  "total_verified": 564,
+  "ranking": [
+    {
+      "rank": 1,
+      "model_id": "D3_volume_spike",
+      "win_rate": 70.2,
+      "recent_win_rate": 80.0,
+      "streak": 9,
+      "trend": "improving",
+      "total": 47,
+      "avg_return": 0.306
+    },
+    {
+      "rank": 2,
+      "model_id": "A3_relief_rocket",
+      "win_rate": 72.7,
+      "recent_win_rate": 72.7,
+      "streak": 4,
+      "trend": "improving",
+      "total": 11,
+      "avg_return": 1.206
+    },
+    {
+      "rank": 3,
+      "model_id": "B3_action_pre",
+      "win_rate": 66.7,
+      "recent_win_rate": 66.7,
+      "streak": 1,
+      "trend": "improving",
+      "total": 33,
+      "avg_return": 0.199
+    },
+    {
+      "rank": 4,
+      "model_id": "B1_triple_signal",
+      "win_rate": 64.7,
+      "recent_win_rate": 64.7,
+      "streak": 1,
+      "trend": "declining",
+      "total": 17,
+      "avg_return": 0.597
+    },
+    {
+      "rank": 5,
+      "model_id": "C1_burst_silence",
+      "win_rate": 65.3,
+      "recent_win_rate": 63.3,
+      "streak": -2,
+      "trend": "stable",
+      "total": 176,
+      "avg_return": 0.145
+    },
+    {
+      "rank": 6,
+      "model_id": "D2_sig_change",
+      "win_rate": 70.0,
+      "recent_win_rate": 60.0,
+      "streak": 4,
+      "trend": "declining",
+      "total": 80,
+      "avg_return": 0.472
+    },
+    {
+      "rank": 7,
+      "model_id": "B2_tariff_to_deal",
+      "win_rate": 57.9,
+      "recent_win_rate": 57.9,
+      "streak": -1,
+      "trend": "improving",
+      "total": 19,
+      "avg_return": 0.721
+    },
+    {
+      "rank": 8,
+      "model_id": "A1_tariff_bearish",
+      "win_rate": 56.5,
+      "recent_win_rate": 56.5,
+      "streak": 3,
+      "trend": "declining",
+      "total": 23,
+      "avg_return": -0.758
+    },
+    {
+      "rank": 9,
+      "model_id": "C2_brag_top",
+      "win_rate": 45.0,
+      "recent_win_rate": 50.0,
+      "streak": 3,
+      "trend": "improving",
+      "total": 60,
+      "avg_return": 0.105
+    },
+    {
+      "rank": 10,
+      "model_id": "A2_deal_bullish",
+      "win_rate": 52.2,
+      "recent_win_rate": 46.7,
+      "streak": -4,
+      "trend": "stable",
+      "total": 90,
+      "avg_return": 0.029
+    },
+    {
+      "rank": 11,
+      "model_id": "C3_night_alert",
+      "win_rate": 37.5,
+      "recent_win_rate": 37.5,
+      "streak": -4,
+      "trend": "insufficient_data",
+      "total": 8,
+      "avg_return": -0.414
+    }
+  ],
+  "adjustments": {
+    "weights": [
+      {
+        "date": "2026-03-15",
+        "model_id": "A2_deal_bullish",
+        "action": "DEMOTE",
+        "reason": "連錯 4 次",
+        "old_weight": 1.0,
+        "new_weight": 0.75,
+        "stats_snapshot": {
+          "total": 90,
+          "win_rate": 52.2,
+          "recent_win_rate": 46.7,
+          "streak": -4,
+          "trend": "stable",
+          "avg_return": 0.029
+        }
+      },
+      {
+        "date": "2026-03-15",
+        "model_id": "B3_action_pre",
+        "action": "PROMOTE",
+        "reason": "近期命中率 66.7% 優秀",
+        "old_weight": 1.0,
+        "new_weight": 1.15,
+        "stats_snapshot": {
+          "total": 33,
+          "win_rate": 66.7,
+          "recent_win_rate": 66.7,
+          "streak": 1,
+          "trend": "improving",
+          "avg_return": 0.199
+        }
+      },
+      {
+        "date": "2026-03-15",
+        "model_id": "D3_volume_spike",
+        "action": "PROMOTE",
+        "reason": "連對 9 次",
+        "old_weight": 1.0,
+        "new_weight": 1.15,
+        "stats_snapshot": {
+          "total": 47,
+          "win_rate": 70.2,
+          "recent_win_rate": 80.0,
+          "streak": 9,
+          "trend": "improving",
+          "avg_return": 0.306
+        }
+      },
+      {
+        "date": "2026-03-15",
+        "model_id": "D2_sig_change",
+        "action": "PROMOTE",
+        "reason": "連對 4 次",
+        "old_weight": 1.0,
+        "new_weight": 1.15,
+        "stats_snapshot": {
+          "total": 80,
+          "win_rate": 70.0,
+          "recent_win_rate": 60.0,
+          "streak": 4,
+          "trend": "declining",
+          "avg_return": 0.472
+        }
+      },
+      {
+        "date": "2026-03-15",
+        "model_id": "A3_relief_rocket",
+        "action": "PROMOTE",
+        "reason": "連對 4 次",
+        "old_weight": 1.0,
+        "new_weight": 1.15,
+        "stats_snapshot": {
+          "total": 11,
+          "win_rate": 72.7,
+          "recent_win_rate": 72.7,
+          "streak": 4,
+          "trend": "improving",
+          "avg_return": 1.206
+        }
+      },
+      {
+        "date": "2026-03-15",
+        "model_id": "C3_night_alert",
+        "action": "ELIMINATE",
+        "reason": "近期命中率 37.5% < 38% 門檻",
+        "old_weight": 1.0,
+        "new_weight": 0,
+        "stats_snapshot": {
+          "total": 8,
+          "win_rate": 37.5,
+          "recent_win_rate": 37.5,
+          "streak": -4,
+          "trend": "insufficient_data",
+          "avg_return": -0.414
+        }
+      }
+    ],
+    "signals": [
+      {
+        "date": "2026-03-15",
+        "signal": "ACTION",
+        "old_confidence": 0.763,
+        "new_confidence": 0.776,
+        "hit_rate": 62.6,
+        "samples": 423
+      },
+      {
+        "date": "2026-03-15",
+        "signal": "RELIEF",
+        "old_confidence": 0.65,
+        "new_confidence": 0.7,
+        "hit_rate": 72.7,
+        "samples": 11
+      }
+    ],
+    "summary": {
+      "promoted": 4,
+      "demoted": 1,
+      "eliminated": 1,
+      "signal_adjusted": 2
+    }
+  },
+  "summary": {
+    "en": "Learning Report — 2026-03-15\nModels: 11 | Verified: 564\nBest: D3_volume_spike (80.0% recent)\nWorst: C3_night_alert (37.5% recent)\nActions: 4 promoted, 1 demoted, 1 eliminated\nSignal adjustments: 2",
+    "zh": "學習報告 — 2026-03-15\n模型數: 11 | 已驗證: 564 筆\n最強: D3_volume_spike（近期 80.0%）\n最弱: C3_night_alert（近期 37.5%）\n調整: 4 升級 / 1 降級 / 1 淘汰\n信號信心度調整: 2 項",
+    "ja": "学習レポート — 2026-03-15\nモデル数: 11 | 検証済み: 564件\n最強: D3_volume_spike（直近 80.0%）\n最弱: C3_night_alert（直近 37.5%）\n調整: 4昇格 / 1降格 / 1除外\nシグナル信頼度調整: 2件"
+  }
+}

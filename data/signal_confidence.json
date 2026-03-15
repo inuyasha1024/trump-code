@@ -1,0 +1,11 @@
+{
+  "TARIFF": 0.7,
+  "DEAL": 0.65,
+  "RELIEF": 0.7,
+  "ACTION": 0.776,
+  "THREAT": 0.55,
+  "CHINA": 0.6,
+  "IRAN": 0.55,
+  "TARIFF_ONLY": 0.7,
+  "DEAL_ONLY": 0.65
+}

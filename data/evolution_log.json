@@ -1,0 +1,44 @@
+[
+  {
+    "date": "2026-03-15",
+    "crossover": 16,
+    "mutation": 12,
+    "distill": 18,
+    "total_new": 46,
+    "total_rules_after": 546,
+    "top_3": [
+      {
+        "features": [
+          "kw_interest_rate",
+          "kw_thank_you_for_your_attention",
+          "kw_economy"
+        ],
+        "direction": "LONG",
+        "hold": 3,
+        "score": 100.0,
+        "origin": "crossover"
+      },
+      {
+        "features": [
+          "kw_interest_rate",
+          "kw_dow_2plus"
+        ],
+        "direction": "LONG",
+        "hold": 3,
+        "score": 100.0,
+        "origin": "distilled"
+      },
+      {
+        "features": [
+          "kw_deal",
+          "kw_beautiful",
+          "volume_falling_3d"
+        ],
+        "direction": "LONG",
+        "hold": 3,
+        "score": 94.4,
+        "origin": "crossover"
+      }
+    ]
+  }
+]
