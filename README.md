@@ -4,7 +4,9 @@
 
 **AI-powered cryptanalysis of presidential communications × stock market impact.**
 
-[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-trumpcode.washinmura.jp-FFD700?style=for-the-badge&logo=vercel&logoColor=white)](https://trumpcode.washinmura.jp)
+### 🌐 [→ trumpcode.washinmura.jp ← LIVE DASHBOARD](https://trumpcode.washinmura.jp)
+
+[![Live Dashboard](https://img.shields.io/badge/🌐_LIVE_DASHBOARD-trumpcode.washinmura.jp-FFD700?style=for-the-badge&labelColor=FFD700&logoColor=black)](https://trumpcode.washinmura.jp)
 [![GitHub Stars](https://img.shields.io/github/stars/sstklen/trump-code?style=for-the-badge&logo=github&color=FFD700)](https://github.com/sstklen/trump-code)
 
 [![Buy Me a Claude Max](https://img.shields.io/badge/☕_Buy_Me_a_Claude_Max_→_Support_This_Project-FFD700?style=for-the-badge&labelColor=FFD700&logoColor=black)](https://buy.stripe.com/5kQ6oI8Wk2Ui6Q3aww4c80r)
