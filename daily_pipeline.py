@@ -456,7 +456,59 @@ def generate_report(today_posts, today_features, triggered_rules, history, sp_by
 
 
 # ============================================================
-# 步驟 6: 同步到 GitHub
+# 步驟 7: 預測市場套利分析
+# ============================================================
+def scan_prediction_markets(signals: list) -> dict:
+    """
+    用今日信號掃描 Polymarket，找出套利機會。
+    失敗時不影響主管線（graceful degradation）。
+    """
+    log("7/8 預測市場套利掃描...")
+    result = {'scanned': False, 'opportunities': [], 'error': None}
+
+    if not signals:
+        log("   今日無關鍵信號，跳過預測市場掃描")
+        return result
+
+    try:
+        from arbitrage_engine import run_live
+        opportunities = run_live(signals)
+
+        if opportunities:
+            good = [o for o in opportunities if o['opportunity_score'] > 0.2]
+            result['scanned'] = True
+            result['opportunities'] = good[:10]
+
+            log(f"   掃描完成: {len(opportunities)} 個市場, {len(good)} 個有價值機會")
+            for i, o in enumerate(good[:5], 1):
+                log(f"      {i}. {o['market_name'][:50]}")
+                log(f"         分數={o['opportunity_score']:.3f} | 方向={o['expected_direction']} | 價格={o['current_price']:.1%}")
+        else:
+            result['scanned'] = True
+            log("   掃描完成但無套利機會")
+
+        # 存檔
+        pm_file = DATA / 'prediction_market_scan.json'
+        with open(pm_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                'date': TODAY,
+                'signals': signals,
+                'opportunities': result['opportunities'],
+                'total_scanned': len(opportunities) if opportunities else 0,
+            }, f, ensure_ascii=False, indent=2)
+
+    except ImportError:
+        log("   arbitrage_engine 未安裝，跳過")
+        result['error'] = 'arbitrage_engine not found'
+    except Exception as e:
+        log(f"   預測市場掃描失敗（不影響主管線）: {e}")
+        result['error'] = str(e)
+
+    return result
+
+
+# ============================================================
+# 步驟 8: 同步到 GitHub
 # ============================================================
 def sync_to_github():
     log("6/6 同步到 GitHub...")
@@ -619,7 +671,10 @@ def main():
     log(f"{'='*70}")
     print(report['summary']['ja'])
 
-    # 7. 同步
+    # 7. 預測市場套利掃描
+    pm_results = scan_prediction_markets(key)
+
+    # 8. 同步
     sync_to_github()
 
     log(f"\n{'='*70}")
