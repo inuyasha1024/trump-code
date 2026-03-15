@@ -629,13 +629,46 @@ class ChatHandler(BaseHTTPRequestHandler):
             })
 
         elif self.path == '/api/signals':
-            # 公開端點：今日信號
+            # 公開端點：完整信號（最近一次 + 歷史 + 劇本）
             report = _load('daily_report.json') or {}
+            preds = _load('predictions_log.json') or []
+            pb = _load('trump_playbook.json') or {}
+            opus = _load('opus_analysis.json') or {}
+            sc = _load('signal_confidence.json') or {}
+
+            # 從最近的預測提取所有信號
+            from collections import defaultdict as _dd
+            recent_signals = _dd(list)
+            for p in (preds[-50:] if isinstance(preds, list) else []):
+                if p.get('status') != 'VERIFIED':
+                    continue
+                s = p.get('day_summary', {})
+                date = p.get('date_signal', '?')
+                sigs = []
+                if s.get('tariff'): sigs.append({'type': 'TARIFF', 'count': s['tariff']})
+                if s.get('deal'): sigs.append({'type': 'DEAL', 'count': s['deal']})
+                if s.get('relief'): sigs.append({'type': 'RELIEF', 'count': s['relief']})
+                if s.get('action'): sigs.append({'type': 'ACTION', 'count': s['action']})
+                if s.get('attack'): sigs.append({'type': 'ATTACK', 'count': s['attack']})
+                if s.get('market_brag'): sigs.append({'type': 'MARKET_BRAG', 'count': s['market_brag']})
+                if s.get('threat'): sigs.append({'type': 'THREAT', 'count': s['threat']})
+                if s.get('russia'): sigs.append({'type': 'RUSSIA', 'count': s['russia']})
+                if s.get('iran'): sigs.append({'type': 'IRAN', 'count': s['iran']})
+                recent_signals[date] = sigs
+
             self._json_response(200, {
                 'date': report.get('date', '?'),
                 'signals': report.get('signals_detected', []),
                 'posts': report.get('posts_today', 0),
                 'consensus': report.get('direction_summary', {}).get('consensus', '?'),
+                'recent_days': dict(list(recent_signals.items())[-7:]),
+                'signal_confidence': sc,
+                'playbook_summary': {
+                    'most_dangerous': pb.get('most_dangerous', {}).get('description', ''),
+                    'most_profitable': pb.get('most_profitable', {}).get('description', ''),
+                    'biggest_surprise': pb.get('biggest_surprise', {}).get('description', ''),
+                },
+                'opus_insight': opus.get('priority_action', ''),
             })
 
         elif self.path == '/api/health':

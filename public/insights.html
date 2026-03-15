@@ -525,9 +525,11 @@
   <div class="hero">
     <h1>TRUMP CODE<br><small style="font-size:16px;opacity:0.8;letter-spacing:2px">川普密碼 ・ トランプ・コード</small></h1>
     <div class="subtitle-row">
-      <span class="subtitle">群眾智慧儀表板</span>
+      <span class="subtitle">AI Signal Intelligence</span>
       <span class="subtitle" style="color: var(--border);">|</span>
-      <span class="subtitle">クラウド・インテリジェンス</span>
+      <span class="subtitle">AI 信號情報平台</span>
+      <span class="subtitle" style="color: var(--border);">|</span>
+      <span class="subtitle">AI シグナル・インテリジェンス</span>
     </div>
     <p style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
       <span class="live-dot"></span>
@@ -564,7 +566,7 @@
     <!-- 今日信號 -->
     <div class="section" id="signals">
       <div class="section-header">
-        <h2>Latest Signals / 最新信號 / 最新シグナル</h2>
+        <h2>Recent Signals / 最近信號 / 直近シグナル</h2>
         <span class="tag" id="signal-count">Loading...</span>
       </div>
       <div class="section-body">
@@ -724,15 +726,48 @@
 
     /** 從 3 個 API 讀取信號+模型+洞見 */
     async function fetchInsights() {
-      // 信號
+      // 信號（完整版：最近一次 + 7 天歷史 + 劇本洞見）
       try {
         const sigRes = await fetch(`${API_BASE}/api/signals`);
         if (sigRes.ok) {
           const sigData = await sigRes.json();
-          const signals = (sigData.signals || []).map(s => ({
-            type: s, confidence: '—', source: 'keyword'
-          }));
-          renderSignals(signals);
+
+          // 最近一次的信號 + 最近 7 天歷史
+          const recentDays = sigData.recent_days || {};
+          const allSignals = [];
+
+          // 先加最近 7 天的歷史信號
+          Object.entries(recentDays).sort((a,b) => b[0].localeCompare(a[0])).forEach(([date, sigs]) => {
+            sigs.forEach(s => {
+              allSignals.push({
+                type: s.type, confidence: `×${s.count}`, date: date
+              });
+            });
+          });
+
+          // 如果沒歷史，用 daily_report 的
+          if (allSignals.length === 0) {
+            (sigData.signals || []).forEach(s => {
+              allSignals.push({ type: s, confidence: '—', date: sigData.date });
+            });
+          }
+
+          renderSignals(allSignals);
+
+          // 劇本洞見
+          const pb = sigData.playbook_summary || {};
+          const opusInsight = sigData.opus_insight || '';
+          if (pb.most_dangerous || opusInsight) {
+            const insightDiv = document.createElement('div');
+            insightDiv.style.cssText = 'margin-top:16px;padding:12px 16px;background:rgba(204,0,0,0.1);border:1px solid #CC0000;border-radius:8px;font-size:13px;';
+            let html = '';
+            if (pb.most_dangerous) html += `<div>🔴 ${escapeHtml(pb.most_dangerous)}</div>`;
+            if (pb.most_profitable) html += `<div style="margin-top:4px">💰 ${escapeHtml(pb.most_profitable)}</div>`;
+            if (pb.biggest_surprise) html += `<div style="margin-top:4px">🤯 ${escapeHtml(pb.biggest_surprise)}</div>`;
+            if (opusInsight) html += `<div style="margin-top:8px;color:#FFD700">🧠 Opus: ${escapeHtml(opusInsight)}</div>`;
+            insightDiv.innerHTML = html;
+            document.getElementById('signal-list').appendChild(insightDiv);
+          }
         }
       } catch(e) { console.warn('[signals]', e); }
 
@@ -792,6 +827,9 @@
         'BEARISH': '📉 看空 Bearish 弱気',
         'TARIFF_ONLY': '🔴 純關稅 Tariff Only',
         'DEAL_ONLY': '🟢 純談判 Deal Only',
+        'ATTACK': '⚔️ 攻擊 Attack 攻撃',
+        'MARKET_BRAG': '📊 炫耀股市 Market Brag',
+        'RUSSIA': '🇷🇺 俄羅斯 Russia ロシア',
       };
       container.innerHTML = `<ul class="signal-list">
         ${signals.map(s => `
@@ -799,9 +837,8 @@
             <div class="signal-icon">${signalIcon(s.type)}</div>
             <div class="signal-content">
               <div class="signal-title">${escapeHtml(sigLabels[s.type] || s.type || 'Signal')}</div>
-              <div class="signal-desc">${escapeHtml(s.confidence || '')}</div>
+              <div class="signal-desc" style="color:var(--text-muted);font-size:12px">${escapeHtml(s.date || '')} ${escapeHtml(s.confidence || '')}</div>
             </div>
-            <div class="signal-score">—</div>
           </li>
         `).join('')}
       </ul>`;
@@ -914,6 +951,82 @@
     refresh();
     setInterval(refresh, REFRESH_INTERVAL);
   </script>
+
+  <!-- 使用說明 -->
+  <div class="container" style="margin-top: 32px; padding-bottom: 40px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; line-height: 1.8;">
+      <h2 style="color: var(--accent-gold); margin-bottom: 16px; font-size: 20px;">
+        🔌 Connect / 連接方式 / 接続方法
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        <!-- API -->
+        <div>
+          <h3 style="color: #FFD700; font-size: 15px;">📡 API</h3>
+          <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0;">
+            REST JSON — 任何語言都能接<br>どの言語でもOK
+          </p>
+          <pre style="background:#111827;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;color:#a0b0c0">GET /api/signals    最新信號
+GET /api/models     模型排行
+GET /api/playbook   三套劇本（避險/佈局/拉盤）
+GET /api/health     系統健康
+GET /api/insights   群眾洞見
+GET /api/status     系統狀態</pre>
+        </div>
+
+        <!-- CLI -->
+        <div>
+          <h3 style="color: #FFD700; font-size: 15px;">💻 CLI</h3>
+          <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0;">
+            命令列工具 — 終端機直接查<br>コマンドラインツール
+          </p>
+          <pre style="background:#111827;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;color:#a0b0c0">git clone github.com/sstklen/trump-code
+cd trump-code
+python3 trump_code_cli.py signals
+python3 trump_code_cli.py models
+python3 trump_code_cli.py predict
+python3 trump_code_cli.py json</pre>
+        </div>
+
+        <!-- MCP -->
+        <div>
+          <h3 style="color: #FFD700; font-size: 15px;">🤖 MCP Server</h3>
+          <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0;">
+            Claude Code / Cursor 直接問 AI<br>AIに直接聞く
+          </p>
+          <pre style="background:#111827;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;color:#a0b0c0">// ~/.claude/settings.json
+{
+  "mcpServers": {
+    "trump-code": {
+      "command": "python3",
+      "args": ["mcp_server.py"]
+    }
+  }
+}
+// 然後直接問：「川普密碼今天信號？」</pre>
+        </div>
+      </div>
+
+      <!-- 統計數字 -->
+      <div style="margin-top: 24px; padding: 16px; background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.2); border-radius: 8px; text-align: center;">
+        <div style="display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary);">
+          <span><strong style="color:#FFD700;font-size:18px">564</strong><br>verified predictions<br>已驗證預測</span>
+          <span><strong style="color:#FFD700;font-size:18px">61.3%</strong><br>hit rate (z=5.39)<br>命中率</span>
+          <span><strong style="color:#FFD700;font-size:18px">550</strong><br>active rules<br>存活規則</span>
+          <span><strong style="color:#FFD700;font-size:18px">11</strong><br>named models<br>命名模型</span>
+          <span><strong style="color:#FFD700;font-size:18px">2</strong><br>prediction markets<br>預測市場</span>
+        </div>
+      </div>
+
+      <!-- GitHub 連結 -->
+      <div style="margin-top: 16px; text-align: center;">
+        <a href="https://github.com/sstklen/trump-code" target="_blank"
+           style="color: var(--accent-gold); text-decoration: none; font-size: 14px;">
+          ⭐ GitHub — All data open / 全部數據公開 / 全データ公開
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- 浮動聊天按鈕 -->
   <style>
