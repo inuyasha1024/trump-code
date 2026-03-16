@@ -159,6 +159,10 @@ _key_index = 0  # 輪用指標
 
 GEMINI_MODEL = "gemini-2.5-flash"
 CROWD_INSIGHTS_FILE = DATA / "crowd_insights.json"
+GAME_CURRENT_FILE = DATA / "game_current.json"
+GAME_PLAYERS_FILE = DATA / "game_players.json"
+GAME_HISTORY_FILE = DATA / "game_history.json"
+GAME_ROUND_HOURS = 6
 
 PORT = 8888
 
@@ -420,6 +424,303 @@ def _save_crowd_insight(user_message: str, ai_response: str, anon_id: str = "") 
 
     with open(CROWD_INSIGHTS_FILE, 'w', encoding='utf-8') as f:
         json.dump(insights, f, ensure_ascii=False, indent=2)
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+
+
+def _iso_to_ts(value: Any) -> float | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
+    except Exception:
+        return None
+
+
+def _ts_to_iso(ts: float) -> str:
+    try:
+        return datetime.fromtimestamp(ts, timezone.utc).isoformat().replace('+00:00', 'Z')
+    except Exception:
+        return _now_iso()
+
+
+def _is_game_expired(game: dict | None, now_ts: float | None = None) -> bool:
+    if not isinstance(game, dict):
+        return False
+    expires_ts = _iso_to_ts(game.get('expires_at'))
+    if expires_ts is None:
+        return False
+    return (now_ts or time.time()) > expires_ts
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _direction_from_change(change: Any) -> str | None:
+    try:
+        value = float(change)
+    except (TypeError, ValueError):
+        return None
+    if value > 0.1:
+        return 'UP'
+    if value < -0.1:
+        return 'DOWN'
+    return 'FLAT'
+
+
+def _load_json_file(path: Path, default: dict | list | None) -> dict | list | None:
+    if not path.exists():
+        return default
+    try:
+        with open(path, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def _save_json_file(path: Path, data: dict | list) -> bool:
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+def _load_game_current():
+    data = _load_json_file(GAME_CURRENT_FILE, None)
+    return data if isinstance(data, dict) else None
+
+
+def _save_game_current(game):
+    if isinstance(game, dict):
+        _save_json_file(GAME_CURRENT_FILE, game)
+
+
+def _load_game_players():
+    if not GAME_PLAYERS_FILE.exists():
+        _save_game_players({})
+    data = _load_json_file(GAME_PLAYERS_FILE, {})
+    return data if isinstance(data, dict) else {}
+
+
+def _save_game_players(players):
+    if isinstance(players, dict):
+        _save_json_file(GAME_PLAYERS_FILE, players)
+
+
+def _load_game_history():
+    if not GAME_HISTORY_FILE.exists():
+        _save_game_history([])
+    data = _load_json_file(GAME_HISTORY_FILE, [])
+    return data if isinstance(data, list) else []
+
+
+def _save_game_history(history):
+    if isinstance(history, list):
+        _save_json_file(GAME_HISTORY_FILE, history)
+
+
+def _find_latest_signal():
+    predictions = _load('rt_predictions.json') or []
+    if not isinstance(predictions, list):
+        return None
+
+    latest = None
+    latest_key = ''
+    for pred in predictions:
+        if not isinstance(pred, dict) or pred.get('status') != 'LIVE':
+            continue
+        sort_key = f"{pred.get('created_at', '')}|{pred.get('id', '')}"
+        if latest is None or sort_key > latest_key:
+            latest = pred
+            latest_key = sort_key
+    return latest
+
+
+def _build_game_round(signal: dict) -> dict | None:
+    signal_id = signal.get('id')
+    if not signal_id:
+        return None
+
+    created_at = signal.get('created_at') or _now_iso()
+    created_ts = _iso_to_ts(created_at) or time.time()
+    expires_at = _ts_to_iso(created_ts + GAME_ROUND_HOURS * 3600)
+
+    return {
+        'signal_id': signal_id,
+        'post_preview': signal.get('post_preview', ''),
+        'signal_types': signal.get('signal_types', []) if isinstance(signal.get('signal_types'), list) else [],
+        'ai_direction': signal.get('predicted_direction'),
+        'ai_confidence': signal.get('confidence'),
+        'spy_at_signal': signal.get('spy_at_signal'),
+        'created_at': created_at,
+        'expires_at': expires_at,
+        'votes': {},
+        'resolved': False,
+        'result': None,
+    }
+
+
+def _pick_verify_value(signal: dict) -> tuple[float | None, str | None]:
+    for key in ('verify_6h', 'verify_3h', 'verify_1h'):
+        value = signal.get(key)
+        if value is None:
+            continue
+        try:
+            return float(value), key
+        except (TypeError, ValueError):
+            continue
+    return None, None
+
+
+def _crowd_direction(votes: dict[str, str]) -> str | None:
+    counts = {'UP': 0, 'DOWN': 0, 'FLAT': 0}
+    for direction in votes.values():
+        if direction in counts:
+            counts[direction] += 1
+
+    max_votes = max(counts.values()) if counts else 0
+    if max_votes == 0:
+        return None
+
+    leaders = [direction for direction, count in counts.items() if count == max_votes]
+    if len(leaders) != 1:
+        return None
+    return leaders[0]
+
+
+def _maybe_start_new_round():
+    current = _load_game_current()
+    now_ts = time.time()
+
+    if current and not current.get('resolved') and _is_game_expired(current, now_ts):
+        current = _resolve_if_needed(current)
+
+    if current and not current.get('resolved') and not _is_game_expired(current, now_ts):
+        return current
+
+    if current and not current.get('resolved') and _is_game_expired(current, now_ts):
+        return current
+
+    latest_signal = _find_latest_signal()
+    current_signal_id = current.get('signal_id') if isinstance(current, dict) else None
+    if latest_signal and latest_signal.get('id') != current_signal_id:
+        new_game = _build_game_round(latest_signal)
+        if new_game:
+            _save_game_current(new_game)
+            return new_game
+
+    return current
+
+
+def _resolve_if_needed(game):
+    if not isinstance(game, dict):
+        return None
+
+    if game.get('resolved') or not _is_game_expired(game):
+        return game
+
+    predictions = _load('rt_predictions.json') or []
+    if not isinstance(predictions, list):
+        return game
+
+    signal_id = game.get('signal_id')
+    signal = next(
+        (item for item in predictions if isinstance(item, dict) and item.get('id') == signal_id),
+        None,
+    )
+    if not signal:
+        return game
+
+    verify_value, verify_source = _pick_verify_value(signal)
+    actual_direction = _direction_from_change(verify_value)
+    if actual_direction is None:
+        return game
+
+    votes = game.get('votes')
+    if not isinstance(votes, dict):
+        votes = {}
+
+    valid_votes = {
+        anon_id: direction
+        for anon_id, direction in votes.items()
+        if direction in {'UP', 'DOWN', 'FLAT'}
+    }
+
+    players = _load_game_players()
+    winners = []
+    ai_direction = game.get('ai_direction')
+
+    for anon_id, direction in valid_votes.items():
+        profile = players.get(anon_id)
+        if not isinstance(profile, dict):
+            profile = {}
+
+        correct = direction == actual_direction
+        delta = 10 if correct else -5
+        if correct and ai_direction and ai_direction != actual_direction:
+            delta += 25
+
+        score = _safe_int(profile.get('score'))
+        wins = _safe_int(profile.get('wins'))
+        streak = _safe_int(profile.get('streak'))
+
+        profile['nickname'] = (profile.get('nickname') or f'anon-{anon_id[:4]}')[:40]
+        profile['score'] = score + delta
+        profile['wins'] = wins + (1 if correct else 0)
+        profile['streak'] = streak + 1 if correct else 0
+        players[anon_id] = profile
+
+        if correct:
+            winners.append(anon_id)
+
+    crowd_direction = _crowd_direction(valid_votes)
+    result = {
+        'actual_direction': actual_direction,
+        'spy_change': verify_value,
+        'verify_source': verify_source,
+        'ai_correct': ai_direction == actual_direction if ai_direction else None,
+        'crowd_correct': crowd_direction == actual_direction if crowd_direction else None,
+        'crowd_direction': crowd_direction,
+        'winning_votes': len(winners),
+        'total_votes': len(valid_votes),
+    }
+
+    game['votes'] = valid_votes
+    game['resolved'] = True
+    game['result'] = result
+    game['resolved_at'] = _now_iso()
+
+    _save_game_current(game)
+    _save_game_players(players)
+
+    history = _load_game_history()
+    if not any(isinstance(item, dict) and item.get('signal_id') == signal_id for item in history):
+        history.append({
+            'signal_id': signal_id,
+            'created_at': game.get('created_at'),
+            'resolved_at': game.get('resolved_at'),
+            'post_preview': game.get('post_preview', ''),
+            'actual_direction': actual_direction,
+            'spy_change': verify_value,
+            'verify_source': verify_source,
+            'ai_direction': ai_direction,
+            'ai_correct': result['ai_correct'],
+            'crowd_direction': crowd_direction,
+            'crowd_correct': result['crowd_correct'],
+            'total_votes': len(valid_votes),
+            'winning_votes': len(winners),
+        })
+        _save_game_history(history)
+
+    return game
 
 
 # =====================================================================
@@ -716,6 +1017,123 @@ class ChatHandler(BaseHTTPRequestHandler):
                 if ins.get('ai_extracted')
             ]
             self._json_response(200, {'insights': public, 'total': len(public)})
+
+        elif self.path == '/api/game-signal':
+            try:
+                signal = _find_latest_signal()
+                if not signal:
+                    self._json_response(404, {'error': 'no live signal'})
+                    return
+
+                created_at = signal.get('created_at') or _now_iso()
+                created_ts = _iso_to_ts(created_at) or time.time()
+                self._json_response(200, {
+                    'id': signal.get('id'),
+                    'post_preview': signal.get('post_preview', ''),
+                    'signal_types': signal.get('signal_types', []),
+                    'direction': signal.get('predicted_direction'),
+                    'confidence': signal.get('confidence'),
+                    'spy_at_signal': signal.get('spy_at_signal'),
+                    'created_at': created_at,
+                    'expires_at': _ts_to_iso(created_ts + GAME_ROUND_HOURS * 3600),
+                })
+            except Exception as e:
+                self._json_response(500, {'error': 'game signal unavailable', 'details': str(e)})
+
+        elif self.path == '/api/game-state':
+            try:
+                game = _maybe_start_new_round()
+                if game:
+                    game = _resolve_if_needed(game) or game
+                    game = _maybe_start_new_round() or _load_game_current()
+
+                if not game:
+                    self._json_response(200, {
+                        'active': False,
+                        'message': 'Waiting for Trump to post...',
+                    })
+                    return
+
+                votes_raw = game.get('votes')
+                if not isinstance(votes_raw, dict):
+                    votes_raw = {}
+
+                vote_counts = {'up': 0, 'down': 0, 'flat': 0}
+                for direction in votes_raw.values():
+                    if direction == 'UP':
+                        vote_counts['up'] += 1
+                    elif direction == 'DOWN':
+                        vote_counts['down'] += 1
+                    elif direction == 'FLAT':
+                        vote_counts['flat'] += 1
+
+                self._json_response(200, {
+                    'active': True,
+                    'signal_id': game.get('signal_id'),
+                    'post_preview': game.get('post_preview', ''),
+                    'signal_types': game.get('signal_types', []),
+                    'ai_direction': game.get('ai_direction'),
+                    'ai_confidence': game.get('ai_confidence'),
+                    'spy_at_signal': game.get('spy_at_signal'),
+                    'votes': vote_counts,
+                    'total_votes': sum(vote_counts.values()),
+                    'expires_at': game.get('expires_at'),
+                    'resolved': bool(game.get('resolved')),
+                    'result': game.get('result'),
+                    'created_at': game.get('created_at'),
+                })
+            except Exception as e:
+                self._json_response(500, {'error': 'game state unavailable', 'details': str(e)})
+
+        elif self.path == '/api/game-leaderboard':
+            try:
+                players = _load_game_players()
+                rows = []
+                for profile in players.values():
+                    if not isinstance(profile, dict):
+                        continue
+                    rows.append({
+                        'nickname': (profile.get('nickname') or 'anon')[:40],
+                        'score': _safe_int(profile.get('score')),
+                        'wins': _safe_int(profile.get('wins')),
+                        'streak': _safe_int(profile.get('streak')),
+                    })
+
+                rows.sort(key=lambda row: (-row['score'], -row['wins'], -row['streak'], row['nickname'].lower()))
+                top_players = [
+                    {
+                        'nickname': row['nickname'],
+                        'score': row['score'],
+                        'wins': row['wins'],
+                        'streak': row['streak'],
+                        'rank': index + 1,
+                    }
+                    for index, row in enumerate(rows[:20])
+                ]
+
+                ai_wins = 0
+                crowd_wins = 0
+                history = _load_game_history()
+                for item in history:
+                    if not isinstance(item, dict):
+                        continue
+                    ai_correct = item.get('ai_correct') is True
+                    crowd_correct = item.get('crowd_correct') is True
+                    if ai_correct and not crowd_correct:
+                        ai_wins += 1
+                    elif crowd_correct and not ai_correct:
+                        crowd_wins += 1
+
+                self._json_response(200, {
+                    'players': top_players,
+                    'ai_vs_crowd': {
+                        'ai_wins': ai_wins,
+                        'crowd_wins': crowd_wins,
+                        'total_rounds': len([item for item in history if isinstance(item, dict)]),
+                    },
+                })
+            except Exception as e:
+                self._json_response(500, {'error': 'leaderboard unavailable', 'details': str(e)})
 
         elif self.path == '/api/dashboard':
             # 一次給前端所有數據（零硬編碼）
@@ -1318,6 +1736,60 @@ class ChatHandler(BaseHTTPRequestHandler):
                 'anon_id': anon[:4] + '****',
                 'quota': quota,
             })
+        elif self.path == '/api/game-vote':
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                body = json.loads(self.rfile.read(length) or b'{}')
+                direction = body.get('direction')
+                if direction not in {'UP', 'DOWN', 'FLAT'}:
+                    self._json_response(400, {'error': 'direction must be UP, DOWN, or FLAT'})
+                    return
+
+                ip = self._get_ip()
+                anon = _anon_id(ip)
+
+                _maybe_start_new_round()
+                game = _load_game_current()
+                if not game:
+                    self._json_response(404, {'error': 'no active round'})
+                    return
+
+                if _is_game_expired(game):
+                    _resolve_if_needed(game)
+                    self._json_response(410, {'error': 'round ended'})
+                    return
+
+                votes = game.get('votes')
+                if not isinstance(votes, dict):
+                    votes = {}
+                votes[anon] = direction
+                game['votes'] = votes
+
+                nickname = body.get('nickname')
+                if isinstance(nickname, str):
+                    nickname = nickname.strip()[:40]
+                    if nickname:
+                        players = _load_game_players()
+                        profile = players.get(anon)
+                        if not isinstance(profile, dict):
+                            profile = {}
+                        profile['nickname'] = nickname
+                        profile['score'] = _safe_int(profile.get('score'))
+                        profile['wins'] = _safe_int(profile.get('wins'))
+                        profile['streak'] = _safe_int(profile.get('streak'))
+                        players[anon] = profile
+                        _save_game_players(players)
+
+                _save_game_current(game)
+                self._json_response(200, {
+                    'success': True,
+                    'direction': direction,
+                    'signal_id': game.get('signal_id'),
+                })
+            except json.JSONDecodeError:
+                self._json_response(400, {'error': 'invalid json'})
+            except Exception as e:
+                self._json_response(500, {'error': 'vote failed', 'details': str(e)})
         else:
             self.send_response(404)
             self.end_headers()
