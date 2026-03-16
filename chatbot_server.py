@@ -962,9 +962,9 @@ class ChatHandler(BaseHTTPRequestHandler):
                 self.headers.get('User-Agent', '')
             )
 
-        if self.path == '/' or self.path == '/index.html' or self.path == '/game' or self.path == '/game.html':
-            # 首頁 = 預測遊戲
-            insights_file = BASE / 'public' / 'game.html'
+        if self.path == '/' or self.path == '/index.html' or self.path == '/insights' or self.path == '/insights.html':
+            # 首頁 = 儀表板（恢復原狀）
+            insights_file = BASE / 'public' / 'insights.html'
             if insights_file.exists():
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html; charset=utf-8')
@@ -987,6 +987,18 @@ class ChatHandler(BaseHTTPRequestHandler):
                 self.send_header('Cache-Control', 'public, max-age=3600')
                 self.end_headers()
                 self.wfile.write(fpath.read_bytes())
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        elif self.path == '/game' or self.path == '/game.html':
+            # 預測遊戲
+            game_file = BASE / 'public' / 'game.html'
+            if game_file.exists():
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(game_file.read_bytes())
             else:
                 self.send_response(404)
                 self.end_headers()
