@@ -1141,6 +1141,9 @@ python3 trump_code_cli.py json</pre>
   <div class="footer-warn">⚠️ <span data-en>Not financial advice</span><span data-zh>非投資建議</span><span data-ja>投資助言ではありません</span></div>
 </footer>
 
+<!-- 遊戲浮動鈕（聊天鈕左邊） -->
+<button class="chat-fab" id="game-fab" title="Game 遊戲 ゲーム" aria-label="Open game" style="right:96px;background:linear-gradient(135deg,#22C55E,#16a34a)">🎮</button>
+
 <!-- 聊天浮動鈕 -->
 <button class="chat-fab" id="chat-fab" title="Chat 聊天 チャット" aria-label="Open chat">💬</button>
 
@@ -1154,6 +1157,15 @@ python3 trump_code_cli.py json</pre>
     <button class="chat-close" id="chat-close" aria-label="Close chat">✕</button>
   </div>
   <iframe src="/chat" title="Trump Code Chatbot"></iframe>
+</div>
+
+<!-- 遊戲面板（跟聊天面板同樣式） -->
+<div class="chat-panel" id="game-panel" style="right:96px">
+  <div class="chat-head">
+    <span>🎮 Prediction Game</span>
+    <button class="chat-close" id="game-close" aria-label="Close game">✕</button>
+  </div>
+  <iframe src="/game" title="Trump Code Game" style="flex:1;border:none;background:var(--navy)"></iframe>
 </div>
 
 <script>
@@ -1203,8 +1215,10 @@ animateRefresh('rf2', 30);
 animateRefresh('rf3', 60);
 
 /* === 聊天面板 === */
-$('chat-fab').addEventListener('click', () => $('chat-panel').classList.toggle('open'));
+$('chat-fab').addEventListener('click', () => { $('chat-panel').classList.toggle('open'); $('game-panel').classList.remove('open'); });
 $('chat-close').addEventListener('click', () => $('chat-panel').classList.remove('open'));
+$('game-fab').addEventListener('click', () => { $('game-panel').classList.toggle('open'); $('chat-panel').classList.remove('open'); });
+$('game-close').addEventListener('click', () => $('game-panel').classList.remove('open'));
 
 /* === 捲動到頂 === */
 const scrollBtn = $('scroll-top');
