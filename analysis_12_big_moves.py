@@ -377,7 +377,6 @@ def main():
     #   valid_mask = 所有有 next_td label 的日期
 
     def build_masks(dates, next_labels, feature_names, features_dict):
-        n = len(dates)
         feat_mask = {f: 0 for f in feature_names}
         target_up = 0
         target_down = 0
@@ -386,8 +385,9 @@ def main():
         for i, d in enumerate(dates):
             bit = 1 << i
             feat = features_dict.get(d, {})
-            for fname in feature_names:
-                if feat.get(fname, False):
+            # feat 只包含 True 的 key，直接遍歷比逐一查 feature_names 快
+            for fname in feat:
+                if fname in feat_mask:
                     feat_mask[fname] |= bit
 
             lbl = next_labels.get(d)
@@ -407,14 +407,16 @@ def main():
         test_dates, test_next, useful, log_features
     )
 
-    popcount = int.bit_count
+    # 使用 Python 3.10+ 內建的 int.bit_count()（C 實作，比 bin().count('1') 快）
 
     winners = []
     tested = 0
 
-    # --- 預計算單特徵的 matched mask（AND valid）---
-    tr_single = [tr_feat_mask[useful[i]] & tr_valid for i in range(n_feat)]
-    te_single = [te_feat_mask[useful[i]] & te_valid for i in range(n_feat)]
+    # --- 預計算單特徵 mask ---
+    # 不含 valid 的版本用於計算 total（與原版一致：total 包含沒有下一交易日的日期）
+    # hits 計算時 AND target_mask（已是 valid 子集），自然只算有效日期
+    tr_single = [tr_feat_mask[useful[i]] for i in range(n_feat)]
+    te_single = [te_feat_mask[useful[i]] for i in range(n_feat)]
 
     # --- 2-combo ---
     for i in range(n_feat):
@@ -422,7 +424,7 @@ def main():
         te_i = te_single[i]
         for j in range(i + 1, n_feat):
             tr_match = tr_i & tr_single[j]
-            tr_total = popcount(tr_match)
+            tr_total = tr_match.bit_count()
             if tr_total < 3:
                 tested += 2
                 continue
@@ -432,16 +434,16 @@ def main():
             feature_combo = [useful[i], useful[j]]
             for target in ('BIG_UP', 'BIG_DOWN'):
                 tested += 1
-                tr_hits = popcount(tr_match & tr_target[target])
+                tr_hits = (tr_match & tr_target[target]).bit_count()
                 train_rate = tr_hits / tr_total * 100
                 if train_rate < 50:
                     continue
 
-                te_total = popcount(te_match)
+                te_total = te_match.bit_count()
                 if te_total < 2:
                     continue
 
-                te_hits = popcount(te_match & te_target[target])
+                te_hits = (te_match & te_target[target]).bit_count()
                 test_rate = te_hits / te_total * 100
                 if test_rate >= 40:
                     winners.append({
@@ -466,13 +468,13 @@ def main():
         for j in range(i + 1, n_feat):
             tr_ij = tr_i & tr_single[j]
             # 提前剪枝：2-combo 的 train_total 已經 < 3，3-combo 一定也 < 3
-            if popcount(tr_ij & tr_valid) < 3:
+            if tr_ij.bit_count() < 3:
                 tested_3 += (n_feat - j - 1) * 2
                 continue
             te_ij = te_i & te_single[j]
             for k in range(j + 1, n_feat):
                 tr_match = tr_ij & tr_single[k]
-                tr_total = popcount(tr_match)
+                tr_total = tr_match.bit_count()
                 if tr_total < 3:
                     tested_3 += 2
                     continue
@@ -482,16 +484,16 @@ def main():
 
                 for target in ('BIG_UP', 'BIG_DOWN'):
                     tested_3 += 1
-                    tr_hits = popcount(tr_match & tr_target[target])
+                    tr_hits = (tr_match & tr_target[target]).bit_count()
                     train_rate = tr_hits / tr_total * 100
                     if train_rate < 50:
                         continue
 
-                    te_total = popcount(te_match)
+                    te_total = te_match.bit_count()
                     if te_total < 2:
                         continue
 
-                    te_hits = popcount(te_match & te_target[target])
+                    te_hits = (te_match & te_target[target]).bit_count()
                     test_rate = te_hits / te_total * 100
                     if test_rate >= 40:
                         winners.append({
