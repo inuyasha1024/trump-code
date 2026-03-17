@@ -887,6 +887,73 @@ html[lang="ja"] [data-ja-block]{display:block}
   </div>
 </section>
 
+<!-- ========== $TRUMP COIN ========== -->
+<section id="sec-trump-coin">
+  <div class="sec-header">
+    <h2>🪙 $TRUMP Coin</h2>
+    <div class="live-indicator"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <p style="color:var(--text-dim);font-size:var(--f4);margin-bottom:20px">
+    <span data-en>Real-time $TRUMP meme coin price. Correlation with S&amp;P 500: 58.6% — the other 41% is pure alpha.</span>
+    <span data-zh>$TRUMP 迷因幣即時價格。與 S&amp;P 500 相關性 58.6% — 另外 41% 是純套利空間。</span>
+    <span data-ja>$TRUMP ミームコインのリアルタイム価格。S&amp;P 500との相関: 58.6% — 残り41%は純粋なアルファ。</span>
+  </p>
+
+  <!-- 即時幣價卡片 -->
+  <div class="play-card" id="trump-coin-card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+      <div style="font-size:clamp(32px,5vw,48px);font-weight:900;color:var(--gold)" id="tc-price">$—</div>
+      <div id="tc-change" style="font-size:var(--f2);font-weight:700">—</div>
+    </div>
+    <div style="display:flex;gap:24px;margin-top:12px;flex-wrap:wrap;font-size:var(--f3);color:var(--text-dim)">
+      <div><span data-en>Market Cap</span><span data-zh>市值</span><span data-ja>時価総額</span>: <strong id="tc-mcap">—</strong></div>
+      <div><span data-en>Updated</span><span data-zh>更新</span><span data-ja>更新</span>: <span id="tc-updated">—</span></div>
+    </div>
+  </div>
+
+  <!-- 關鍵發現卡片 -->
+  <h3 style="color:var(--gold);font-size:var(--f3);margin:0 0 12px">💡 <span data-en>Key Findings: $TRUMP vs Stock Market</span><span data-zh>關鍵發現：$TRUMP 幣 vs 美股</span><span data-ja>重要発見：$TRUMP vs 株式市場</span></h3>
+  <div class="disc-grid">
+    <div class="disc-card profit">
+      <div style="font-size:var(--f2);font-weight:800;margin-bottom:8px">58.6%</div>
+      <div style="font-size:var(--f3);font-weight:600;margin-bottom:8px">
+        <span data-en>Correlation with SPY</span><span data-zh>與 SPY 相關性</span><span data-ja>SPYとの相関</span>
+      </div>
+      <div style="font-size:var(--f4);color:var(--text-dim);line-height:1.5">
+        <span data-en>41% moves in the opposite direction — that's the arbitrage window between coin and stock.</span>
+        <span data-zh>41% 反方向 — 這就是幣跟股之間的套利窗口。</span>
+        <span data-ja>41%は逆方向 — コインと株のアービトラージウィンドウ。</span>
+      </div>
+    </div>
+    <div class="disc-card danger">
+      <div style="font-size:var(--f2);font-weight:800;margin-bottom:8px">
+        <span data-en>Silence = Opposite</span><span data-zh>沉默 = 相反</span><span data-ja>沈黙 = 正反対</span>
+      </div>
+      <div style="font-size:var(--f4);color:var(--text-dim);line-height:1.5">
+        <span data-en>When Trump is silent: SPY goes up 80% of the time, but $TRUMP drops 75%. The two markets diverge the most during silence.</span>
+        <span data-zh>Trump 沉默時：SPY 漲 80%，但 $TRUMP 跌 75%。沉默時兩個市場的分歧最大。</span>
+        <span data-ja>トランプが沈黙すると：SPYは80%上昇、$TRUMPは75%下落。沈黙時に最も乖離。</span>
+      </div>
+    </div>
+    <div class="disc-card surprise">
+      <div style="font-size:var(--f2);font-weight:800;margin-bottom:8px">+0.83%</div>
+      <div style="font-size:var(--f3);font-weight:600;margin-bottom:8px">
+        <span data-en>ATTACK Posts → Coin Pumps</span><span data-zh>攻擊推文 → 幣漲</span><span data-ja>攻撃投稿 → コイン上昇</span>
+      </div>
+      <div style="font-size:var(--f4);color:var(--text-dim);line-height:1.5">
+        <span data-en>When Trump attacks someone, $TRUMP pumps +0.83% on average (fan effect). SPY barely moves. Pure meme energy.</span>
+        <span data-zh>Trump 攻擊某人時，$TRUMP 平均漲 +0.83%（粉絲效應），SPY 幾乎不動。純迷因能量。</span>
+        <span data-ja>トランプが誰かを攻撃すると$TRUMPは平均+0.83%上昇（ファン効果）。SPYはほぼ無反応。</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px;text-align:right">
+    <a href="https://www.coingecko.com/en/coins/official-trump" target="_blank" rel="noopener" style="font-size:var(--f4)">
+      <span data-en>View on CoinGecko</span><span data-zh>在 CoinGecko 查看</span><span data-ja>CoinGeckoで見る</span> →
+    </a>
+  </div>
+</section>
+
 <!-- ========== S5: SIGNALS & RESULTS ========== -->
 <section id="sec-signals">
   <div class="sec-header">
@@ -1576,6 +1643,47 @@ async function loadPolymarketTrump() {
   }
 }
 
+/* === $TRUMP Coin 即時幣價 === */
+async function loadTrumpCoin() {
+  try {
+    const resp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=official-trump&vs_currencies=usd&include_24hr_change=true&include_market_cap=true');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const coin = data['official-trump'];
+    if (!coin || !coin.usd) throw new Error('No price data');
+
+    const price = coin.usd;
+    const change = coin.usd_24h_change || 0;
+    const mcap = coin.usd_market_cap || 0;
+
+    // 幣價
+    $('tc-price').textContent = `$${price.toFixed(2)}`;
+    $('tc-price').style.color = 'var(--gold)';
+
+    // 漲跌
+    const arrow = change >= 0 ? '▲' : '▼';
+    const color = change >= 0 ? 'var(--green)' : 'var(--red)';
+    $('tc-change').innerHTML = `<span style="color:${color}">${arrow} ${Math.abs(change).toFixed(2)}%</span>`;
+
+    // 市值
+    const mcapStr = mcap >= 1e9 ? `$${(mcap/1e9).toFixed(1)}B` : `$${Math.round(mcap/1e6)}M`;
+    $('tc-mcap').textContent = mcapStr;
+
+    // 更新時間
+    const now = new Date();
+    $('tc-updated').textContent = now.toLocaleTimeString();
+
+  } catch(e) {
+    console.warn('$TRUMP coin fetch failed:', e);
+    $('tc-price').innerHTML = `<a href="https://www.coingecko.com/en/coins/official-trump" target="_blank" style="color:var(--gold);font-size:var(--f2)">${t('Price unavailable','幣價暫時無法取得','価格取得不可')} →</a>`;
+    $('tc-change').textContent = '';
+    $('tc-mcap').textContent = '—';
+  }
+}
+
+// 每 60 秒刷新 $TRUMP 幣價
+setInterval(loadTrumpCoin, 60000);
+
 /* === 啟動 === */
 async function init() {
   // 並行載入所有 API
@@ -1586,6 +1694,7 @@ async function init() {
     loadCrowd(),
     loadPosts(),
     loadPolymarketTrump(),
+    loadTrumpCoin(),
   ]);
 }
 
