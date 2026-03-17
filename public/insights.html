@@ -603,37 +603,6 @@ html[lang="ja"] [data-ja-block]{display:block}
   *{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
 }
 
-/* === 遊戲嵌入 === */
-.game-countdown{font-size:clamp(1.8rem,5vw,2.5rem);font-weight:900;color:var(--gold);text-align:center;letter-spacing:0.04em;font-family:'JetBrains Mono',monospace}
-.game-countdown-sub{color:var(--text-dim);font-size:var(--f4);text-align:center;margin-top:4px}
-.game-vote-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-.game-vote-btn{
-  appearance:none;border:2px solid var(--border);
-  background:rgba(255,255,255,0.03);color:var(--text);
-  border-radius:14px;padding:14px 0;
-  font-size:var(--f3);font-weight:700;cursor:pointer;
-  transition:transform 0.16s var(--ease),border-color 0.16s,background 0.16s;
-}
-.game-vote-btn:hover:not(:disabled){transform:translateY(-1px)}
-.game-vote-btn:disabled{cursor:default;opacity:0.7}
-.game-vote-btn.bull{border-color:rgba(34,197,94,0.5)}
-.game-vote-btn.bull.selected{background:rgba(34,197,94,0.15);border-color:var(--green)}
-.game-vote-btn.bear{border-color:rgba(220,38,38,0.5)}
-.game-vote-btn.bear.selected{background:rgba(220,38,38,0.15);border-color:var(--red)}
-.game-vote-btn.flat{border-color:rgba(148,163,184,0.4)}
-.game-vote-btn.flat.selected{background:rgba(148,163,184,0.12);border-color:var(--text-dim)}
-.game-ai-line{font-size:var(--f3);font-weight:700;margin:8px 0}
-.game-voted{font-size:var(--f3);font-weight:700;color:var(--green);text-align:center;padding:8px 0}
-.game-bar-row{display:flex;align-items:center;gap:8px;margin:4px 0}
-.game-bar-row .bar-track{flex:1;height:4px}
-.game-bar-label{width:22px;text-align:center}
-.game-bar-pct{width:40px;text-align:right;font-size:var(--f4);color:var(--text-dim);font-family:'JetBrains Mono',monospace}
-.game-cta{display:inline-block;margin-top:12px;padding:8px 24px;border-radius:100px;font-size:var(--f4);font-weight:600;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-dim);transition:opacity 0.2s}
-.game-cta:hover{opacity:0.85}
-.game-wait{text-align:center;padding:20px}
-.game-wait-icon{font-size:2rem;margin-bottom:8px}
-.game-wait-text{color:var(--gold);font-size:var(--f3);font-weight:700}
-.game-preview{color:var(--text-dim);font-style:italic;font-size:var(--f4);line-height:1.6;margin:0 0 10px;text-align:left}
 </style>
 </head>
 <body>
@@ -717,16 +686,6 @@ html[lang="ja"] [data-ja-block]{display:block}
 
 <main class="container">
 
-<!-- ========== PREDICTION GAME (embedded) ========== -->
-<section id="sec-game">
-  <div class="sec-header">
-    <h2>🎮 <span data-en>Prediction Game</span><span data-zh>預測遊戲</span><span data-ja>予測ゲーム</span></h2>
-    <div class="live-indicator"><div class="live-dot"></div>LIVE</div>
-  </div>
-  <div id="game-embed" class="signal-day" style="text-align:center">
-    <div class="skeleton" style="height:180px"></div>
-  </div>
-</section>
 
 <!-- ========== ACTIVE COMPUTATION ========== -->
 <section id="sec-engines">
@@ -1609,7 +1568,7 @@ async function loadPosts() {
       const src = p.source === 'x_api' ? 'X (Twitter)' : p.source === 'trumpstruth' ? 'TrumpStruth' : 'Truth Social';
       const daySigs = p.signals || {};
 
-      // 從信號資料提取標籤（支援每日管線 + 即時引擎兩種格式）
+      // 從信號資料提取標籤（支援每日管線 + 即時引擎 + 前端即時分析 三層）
       const sigTags = [];
       if (daySigs.source === 'realtime') {
         // 即時引擎格式：rt_signals 是陣列，有方向和信心度
@@ -1626,12 +1585,40 @@ async function loadPosts() {
         }
         const st = daySigs.rt_status;
         if (st === 'LIVE') sigTags.push(`<span class="sig-tag" style="background:rgba(255,215,0,0.1);color:var(--gold)">⏱ LIVE</span>`);
-      } else {
+      } else if (Object.keys(daySigs).length > 0) {
         // 每日管線格式：{ key: number }
         for (const [k, v] of Object.entries(daySigs)) {
           if (typeof v === 'number' && v > 0 && SIG_LABELS[k.toUpperCase()]) {
             sigTags.push(`<span class="sig-tag">${SIG_LABELS[k.toUpperCase()]} ×${v}</span>`);
           }
+        }
+      }
+
+      // 第三層：前端即時關鍵字分析（後端沒配對到時，前端自己跑）
+      if (!sigTags.length && text) {
+        const tl = text.toLowerCase();
+        const FE_KEYWORDS = {
+          TARIFF: ['tariff','tariffs','duty','duties','reciprocal'],
+          DEAL: ['deal','agreement','negotiate','signed','talks'],
+          RELIEF: ['pause','delay','exempt','exception','suspend','waiver'],
+          ACTION: ['immediately','effective','hereby','executive order','just signed'],
+          THREAT: ['ban','block','restrict','sanction','punish','retaliate'],
+          ATTACK: ['fake','fraud','witch hunt','corrupt','rigged','crooked','radical left','deranged'],
+          BULLISH: ['stock market','all time high','record high','great economy','jobs','incredible'],
+          BEARISH: ['disaster','terrible','worst','crash','collapse'],
+          CHINA: ['china','chinese','beijing','xi jinping'],
+          IRAN: ['iran','iranian','tehran'],
+          RUSSIA: ['russia','russian','putin','ukraine'],
+        };
+        for (const [sigType, kws] of Object.entries(FE_KEYWORDS)) {
+          const matched = kws.filter(kw => tl.includes(kw));
+          if (matched.length && SIG_LABELS[sigType]) {
+            sigTags.push(`<span class="sig-tag">${SIG_LABELS[sigType]}</span>`);
+          }
+        }
+        // 沒有任何關鍵字 = 沉默信號（Trump 密碼的核心發現：沉默 = 80% 看漲）
+        if (!sigTags.length) {
+          sigTags.push(`<span class="sig-tag" style="background:rgba(255,215,0,0.08);color:var(--gold-dim)">🔇 ${t('No keywords','無關鍵字','キーワードなし')}</span>`);
         }
       }
 
@@ -1641,7 +1628,7 @@ async function loadPosts() {
           <span class="src">${src}</span>
         </div>
         <div class="post-text">${esc(text)}${url ? ` <a href="${esc(url)}" target="_blank" rel="noopener" style="font-size:var(--f4)">→ ${t('original','原文','原文')}</a>` : ''}</div>
-        ${sigTags.length ? `<div class="post-signals"><span class="ps-label">${t('Signals','信號','シグナル')}:</span>${sigTags.join('')}</div>` : ''}
+        <div class="post-signals"><span class="ps-label">${t('Signals','信號','シグナル')}:</span>${sigTags.join('')}</div>
       </div>`;
     });
 
@@ -1727,115 +1714,6 @@ async function loadTrumpCoin() {
 // 每 60 秒刷新 $TRUMP 幣價
 setInterval(loadTrumpCoin, 60000);
 
-/* === 遊戲嵌入 === */
-let _gameTimer = null;
-const GAME_VOTE_KEY = 'trump-code-game-vote:';
-
-function _getGameVote(signalId) {
-  try { return JSON.parse(localStorage.getItem(GAME_VOTE_KEY + signalId)); } catch(e) { return null; }
-}
-function _setGameVote(signalId, dir) {
-  try { localStorage.setItem(GAME_VOTE_KEY + signalId, JSON.stringify({direction: dir})); } catch(e) {}
-}
-
-// 信號類型→顏色（用 CSS 變數）
-const SIG_COLORS = {TARIFF:'var(--red)',DEAL:'var(--green)',RELIEF:'var(--blue)',ACTION:'#f59e0b',THREAT:'#facc15',BULLISH:'var(--green)',BEARISH:'var(--red)'};
-const DIR_INFO = {UP:{emoji:'📈',color:'var(--green)'},DOWN:{emoji:'📉',color:'var(--red)'},FLAT:{emoji:'😐',color:'var(--text-dim)'}};
-
-function _renderGameEmbed(d) {
-  const ge = $('game-embed');
-  if (!ge) return;
-
-  // 無 active round
-  if (!d || !d.active) {
-    ge.innerHTML = `<div class="game-wait"><div class="game-wait-icon">⏳</div><p class="game-wait-text">${t('Waiting for Trump to post...','等待川普發文中...','トランプの投稿を待機中...')}</p><a href="/game" class="game-cta">${t('Full Game →','完整遊戲 →','フルゲーム →')}</a></div>`;
-    return;
-  }
-
-  const sv = _getGameVote(d.signal_id);
-  const voted = sv && sv.direction;
-  const rem = Math.max(0, new Date(d.expires_at) - Date.now());
-  const expired = rem === 0;
-
-  // 倒數
-  const h = String(Math.floor(rem / 36e5)).padStart(2,'0');
-  const m = String(Math.floor(rem % 36e5 / 6e4)).padStart(2,'0');
-  const s = String(Math.floor(rem % 6e4 / 1e3)).padStart(2,'0');
-  const countdown = expired ? (d.resolved ? '✅' : '⏳') : `⏰ ${h}:${m}:${s}`;
-
-  // 信號標籤
-  const tags = (d.signal_types || []).map(x => {
-    const c = SIG_COLORS[x] || 'var(--text-dim)';
-    return `<span class="sig-tag" style="color:${c};border-color:${c}">${esc(x)}</span>`;
-  }).join('');
-
-  // AI 預測
-  const ai = DIR_INFO[d.ai_direction] || DIR_INFO.FLAT;
-  const aiLabel = d.ai_direction === 'UP' ? t('Bull','看漲','上昇') : d.ai_direction === 'DOWN' ? t('Bear','看跌','下落') : t('Flat','持平','横ばい');
-  const cf = d.ai_confidence > 1 ? Math.round(d.ai_confidence) : Math.round((d.ai_confidence||0)*100);
-
-  // 投票區
-  let voteHtml = '';
-  if (expired) {
-    voteHtml = `<div class="game-countdown-sub">${t('Round expired','本局已結束','ラウンド終了')}</div>`;
-  } else if (voted) {
-    const vi = DIR_INFO[voted] || DIR_INFO.FLAT;
-    const vl = voted === 'UP' ? t('Bull','看漲','上昇') : voted === 'DOWN' ? t('Bear','看跌','下落') : t('Flat','持平','横ばい');
-    voteHtml = `<div class="game-voted">✅ ${t('Voted','已投票','投票済み')}: ${vi.emoji} ${vl}</div>`;
-  } else {
-    voteHtml = `<div class="game-vote-grid">` +
-      `<button class="game-vote-btn bull" onclick="window._gameVote('UP')">📈 ${t('Bull','看漲','上昇')}</button>` +
-      `<button class="game-vote-btn bear" onclick="window._gameVote('DOWN')">📉 ${t('Bear','看跌','下落')}</button>` +
-      `<button class="game-vote-btn flat" onclick="window._gameVote('FLAT')">😐 ${t('Flat','持平','横ばい')}</button>` +
-      `</div>`;
-  }
-
-  // 比例條
-  const tot = (d.votes?.up||0) + (d.votes?.down||0) + (d.votes?.flat||0) || 1;
-  const pU = Math.round((d.votes?.up||0)/tot*100);
-  const pD = Math.round((d.votes?.down||0)/tot*100);
-  const pF = Math.round((d.votes?.flat||0)/tot*100);
-  const bars = [['📈',pU,'var(--green)'],['📉',pD,'var(--red)'],['😐',pF,'var(--text-dim)']].map(([icon,pct,color]) =>
-    `<div class="game-bar-row"><span class="game-bar-label">${icon}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div><span class="game-bar-pct">${pct}%</span></div>`
-  ).join('');
-
-  ge.innerHTML =
-    `<div class="game-countdown">${countdown}</div>` +
-    `<div class="signal-tags" style="justify-content:center;margin:10px 0">${tags}</div>` +
-    `<p class="game-preview">"${esc((d.post_preview||'').slice(0,120))}..."</p>` +
-    `<div class="game-ai-line" style="color:${ai.color}">🤖 ${t('AI says','AI 預測','AI予測')} ${ai.emoji} ${aiLabel} ${cf}%</div>` +
-    voteHtml + bars +
-    `<div class="game-countdown-sub">👥 ${d.total_votes||0} ${t('votes','票','票')}</div>` +
-    `<a href="/game" class="game-cta">${t('Full Game →','完整遊戲 →','フルゲーム →')}</a>`;
-}
-
-window._gameVote = async function(dir) {
-  try {
-    const r = await fetch(BASE + '/api/game-vote', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({direction:dir})});
-    const j = await r.json();
-    if (j.success) { _setGameVote(j.signal_id, dir); loadGameEmbed(); }
-  } catch(e) { console.warn('Game vote failed:', e); }
-};
-
-async function loadGameEmbed() {
-  try {
-    const r = await fetch(BASE + '/api/game-state');
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const d = await r.json();
-    _renderGameEmbed(d);
-
-    // 每秒更新倒數（不重 fetch）
-    if (_gameTimer) clearInterval(_gameTimer);
-    if (d && d.active && new Date(d.expires_at) > Date.now()) {
-      _gameTimer = setInterval(() => _renderGameEmbed(d), 1000);
-    }
-  } catch(e) {
-    const ge = $('game-embed');
-    if (ge) ge.innerHTML = `<div class="game-wait"><div class="game-wait-icon">🎮</div><a href="/game" class="game-cta">${t('Open Game','開啟遊戲','ゲームを開く')} →</a></div>`;
-  }
-}
-
-setInterval(loadGameEmbed, 15000);
 
 /* === 啟動 === */
 async function init() {
@@ -1848,7 +1726,6 @@ async function init() {
     loadPosts(),
     loadPolymarketTrump(),
     loadTrumpCoin(),
-    loadGameEmbed(),
   ]);
 }
 
