@@ -1289,9 +1289,8 @@ animateRefresh('rf2', 30);
 animateRefresh('rf3', 60);
 
 /* === 聊天面板 === */
-$('chat-fab').addEventListener('click', () => { $('chat-panel').classList.toggle('open'); $('game-panel').classList.remove('open'); });
+/* onclick 已在 HTML button 上，這裡只處理關閉按鈕 */
 $('chat-close').addEventListener('click', () => $('chat-panel').classList.remove('open'));
-$('game-fab').addEventListener('click', () => { $('game-panel').classList.toggle('open'); $('chat-panel').classList.remove('open'); });
 $('game-close').addEventListener('click', () => $('game-panel').classList.remove('open'));
 
 /* === 捲動到頂 === */
